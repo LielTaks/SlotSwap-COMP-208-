@@ -1,5 +1,5 @@
 <?php
-
+//comment
 session_start();
 //notes
 include('Config/db_connect.php');
