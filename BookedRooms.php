@@ -1,11 +1,15 @@
 <?php
-
-session_start();
+session_start(); 
+if($_SESSION["Role"]=='Admin'){
+ // header('Location: index.php');
+} else {
+ header('Location: index.php');
+}
 
 include('Config/db_connect.php');
 
 
-$sql = "SELECT * FROM `Rooms` WHERE NOT EXISTS(SELECT 1 FROM `Bookings` WHERE `Bookings`.`RoomID`=`Rooms`.`RoomID`);";
+ $sql = "SELECT `name`, `email`, `usdNight`, `Facilities`, `Rooms`.`RoomID` FROM `Bookings`, `Rooms` WHERE `Bookings`.`RoomID` = `Rooms`.`RoomID`;";
 
  $result = mysqli_query($conn, $sql);
 
@@ -22,10 +26,9 @@ mysqli_close($conn);
 <!DOCTYPE html> 
 <html>
 
-
-<?php include('templates/header.php'); ?>
-
-<h4 class="center grey-text">Available Rooms</h4>
+<?php include('templates/head-dash.php'); ?>
+<?php $title = "Rooms Booked"; ?>
+<h4 class="center grey-text"><?php echo $title ?></h4>
 
 <div class="container">
 
@@ -38,17 +41,16 @@ mysqli_close($conn);
                 <div class="card-content center">
                     <label>Room Number:</label>
                     <h6><?php echo htmlspecialchars($Room['RoomID']); ?></h6>
-                    <label>Number of Occupants:</label>
-                    <div><?php echo htmlspecialchars($Room['nOccupants']); ?></div>
+                    <label>name of Occupants:</label>
+                    <div><?php echo htmlspecialchars($Room['name']); ?></div>
                     <label>Price in USD per night:</label>
-                     <div><?php echo htmlspecialchars($Room['usdNight']); ?></div>
+                     <div><?php echo htmlspecialchars($Room['usdNight']);?></div>
                      <label>Room Facilities:</label>
                      <div><?php echo htmlspecialchars($Room['Facilities']); ?></div>
-                   <!-- <label>Room Image:</label>
-                     <div><?php  //img src =($Room['Photos']); ?></div> -->   
+
                 </div>  
             <div class="card-action center">
-            <a class = "brand-text" href = "add.php">Select Room</a>
+            <a class = "brand-text" href = "#">Room Booked</a>
             </div>
         </div>
     </div>

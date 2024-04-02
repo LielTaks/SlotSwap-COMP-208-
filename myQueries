@@ -1,0 +1,6 @@
+INSERT INTO `Bookings` (`BookingID`, `fName`, `sName`, `Email`, `sDate`, `eDate`, `RoomID`, `Timestamp`) VALUES (NULL, 'Liel', 'Takawira', 'test@test.org', '2021-10-20', '2021-10-21', '1', current_timestamp());
+
+INSERT INTO `Bookings` (`BookingID`, `name`, `email`, `check-in`, `check-out`, `RoomID`, `Timestamp`) VALUES (NULL, 'test', 'test@test.com', '2021-10-22', '2021-10-24', '', current_timestamp())
+Update the bookings
+$sql = "UPDATE `Bookings` SET `name` = \'Liel isheanesu\' WHERE `Bookings`.`BookingID` = 2;";
+Update the ROoms
