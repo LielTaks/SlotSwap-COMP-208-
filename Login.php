@@ -1,17 +1,7 @@
-<!-- test -->
 <style>
 form {
   border: 0px solid #f1f1f1;
 }
-
-body {
-    background-image: url('C:\Users\Bolu Akinpelu\OneDrive\Documents\COMP208\COMP208-\uni of jpeg.jpg');
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    background-color: rgba(255, 255, 255, 0.5); 
-}
-
 
 /* Full-width inputs */
 input[type=text], input[type=password] {
@@ -87,11 +77,11 @@ span.psw {
 <?php session_start(); ?>
 
  <head>
-  <link rel="stylesheet" type="text/css" href="Login.CSS">
+
       </head>
 <form action="Login.php" method="post">
   <div class="imgcontainer">
-    <img src="avatar_admin.png" alt="Avatar" class="avatar">
+    <img src="https://cdn.drawception.com/drawings/892827/cvrg7fZGGZ.png" alt="Avatar" class="avatar">
   </div>
 
   <div class="container">
@@ -112,4 +102,3 @@ span.psw {
 </form>
 
 
-</html>
