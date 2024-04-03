@@ -47,6 +47,10 @@ img.avatar {
   width: 10%;
   border-radius: 50%;
 }
+img.background {
+  opacity: 0.5;
+
+}
 
 /* Add padding to containers */
 .container {
@@ -82,6 +86,10 @@ span.psw {
 <form action="Login.php" method="post">
   <div class="imgcontainer">
     <img src="https://cdn.drawception.com/drawings/892827/cvrg7fZGGZ.png" alt="Avatar" class="avatar">
+  </div>
+
+  <div class = "img.background">
+    <img src="https://www.thereader.org.uk/wp-content/uploads/2017/06/University-of-Liverpool.png" alt ="Logo">
   </div>
 
   <div class="container">
