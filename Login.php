@@ -4,6 +4,15 @@ form {
   border: 0px solid #f1f1f1;
 }
 
+body {
+    background-image: url('C:\Users\Bolu Akinpelu\OneDrive\Documents\COMP208\COMP208-\uni of jpeg.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-color: rgba(255, 255, 255, 0.5); 
+}
+
+
 /* Full-width inputs */
 input[type=text], input[type=password] {
   width: 100%;
