@@ -1,0 +1,30 @@
+CREATE TABLE timetable (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    day VARCHAR(20),
+    time VARCHAR(20),
+    activity VARCHAR(100),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+INSERT INTO timetable (user_id, day, time, activity) VALUES
+(1, 'Monday', '09:00 AM', 'Lecture: Math'),
+(1, 'Tuesday', '10:00 AM', 'Lab: Physics'),
+(1, 'Wednesday', '10:00 AM', 'Lab: Chemistry'),
+(1, 'Thursday', '11:00 AM', 'Lab: Biology');
+
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    password VARCHAR(50) NOT NULL,
+    email VARCHAR(100)
+);
+
+ALTER TABLE users
+ADD COLUMN student_id INT,
+ADD COLUMN first_name VARCHAR(50),
+ADD COLUMN last_name VARCHAR(50);
+
+
+//example data without using the website
+INSERT INTO users (username, password, email) VALUES ('user1', 'password1', 'user1@example.com');
