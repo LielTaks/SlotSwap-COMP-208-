@@ -65,51 +65,35 @@ $timetableEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
             padding: 20px;
             overflow: auto;
             display: grid;
-            grid-template-columns: 120px auto; /* Adjust column widths */
+            grid-template-columns: 120px repeat(5, 1fr); /* Evenly sized columns */
             grid-gap: 20px;
         }
 
         #timetable {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            grid-gap: 10px;
+            grid-template-columns: repeat(6, 1fr); /* 6 columns for Monday - Friday */
+            grid-template-rows: 60px repeat(9, 1fr); /* 10 rows for 9:00 AM - 5:00 PM */
+            grid-gap: 1px; /* Add gap between grid items */
         }
 
-        .times {
-            display: grid;
-            grid-template-rows: repeat(9, 1fr); /* Adjust row heights */
-            grid-gap: 2px; /* Add gap between time slots */
-            margin-top: 30px; /* Add margin to align with timetable */
-        }
-
-        .time {
-            border-bottom: 1px solid #ccc;
-            padding: 5px 10px;
-            background-color: #fff;
-            text-align: right; /* Align time text to the right */
-        }
-
-        .day {
+        .time, .day {
             border: 1px solid #ccc;
             padding: 10px;
             background-color: #fff;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            border-radius: 5px;
-            margin-bottom: 20px;
         }
 
         .day h3 {
-            margin-top: 0;
-            margin-bottom: 10px;
+            margin: 0;
             font-size: 18px;
             color: #333;
+            text-align: center;
         }
 
         .slot {
             border: 1px solid #ccc;
             padding: 10px;
             background-color: #f9f9f9;
-            margin-bottom: 10px;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
             overflow: hidden; /* Hide overflow text */
             white-space: nowrap; /* Prevent text wrapping */
@@ -129,50 +113,41 @@ $timetableEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
 
     <div id="content">
-        <div class="times">
-            <?php
-            // Define array for hours from 9 AM to 5 PM
-            $hours = array('9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM');
-
-            // Display the hours on the y-axis
-            foreach ($hours as $hour) {
-                echo "<div class='time'>$hour</div>";
-            }
-            ?>
-        </div>
         <div id="timetable">
             <?php
             // Define days of the week
             $daysOfWeek = array('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday');
 
-            // Loop through days of the week
+            // Display day headers
+            echo "<div class='time'></div>"; // Empty slot for spacing
             foreach ($daysOfWeek as $day) {
-                // Filter timetable entries for the current day
-                $dayEntries = array_filter($timetableEntries, function($entry) use ($day) {
-                    return $entry['day'] === $day;
-                });
+                echo "<div class='day'><h3>$day</h3></div>";
+            }
 
-                // Display timetable entries for the current day
-                echo "<div class='day'>";
-                echo "<h3>$day</h3>";
+            // Define array for hours from 9 AM to 5 PM
+            $hours = array('9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM');
 
-                // Loop through hours and display timetable slots
-                foreach ($hours as $hour) {
-                    // Check if there is an entry for the current hour and day
-                    $entryFound = false;
-                    foreach ($dayEntries as $entry) {
-                        if ($entry['time'] === $hour) {
+            // Loop through hours
+            foreach ($hours as $hour) {
+                // Display the hours on the y-axis
+                echo "<div class='time'>$hour</div>";
+                
+                // Loop through days of the week
+                foreach ($daysOfWeek as $day) {
+                    // Find timetable entry for the current day and hour
+                    $found = false;
+                    foreach ($timetableEntries as $entry) {
+                        if ($entry['day'] === $day && $entry['time'] === $hour) {
                             echo "<div class='slot'>" . $entry['activity'] . "</div>";
-                            $entryFound = true;
+                            $found = true;
                             break;
                         }
                     }
                     // If no entry found, display an empty slot
-                    if (!$entryFound) {
+                    if (!$found) {
                         echo "<div class='slot'></div>";
                     }
                 }
-                echo "</div>"; // Close day
             }
             ?>
         </div>
