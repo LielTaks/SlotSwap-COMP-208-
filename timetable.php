@@ -234,9 +234,9 @@ $timetableEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
             });
         });
 
-       // $('.modal').click(function () {
- //           $(this).fadeOut();
- //       });
+        $('.modal').dblclick(function () {
+    $(this).fadeOut();
+});
     });
 </script>
 </body>
