@@ -121,23 +121,6 @@ $timetableEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
         }
-
-        .navigation {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .navigation button {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            cursor: pointer;
-        }
-
-        .navigation button:hover {
-            background-color: #0056b3;
-        }
     </style>
 </head>
 <body>
@@ -149,15 +132,10 @@ $timetableEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <h2>Welcome, <?php echo $_SESSION['username']; ?></h2>
     <h3>ID: <?php echo $_SESSION['student_id']; ?></h3>
     <p>Welcome to SlotSwap! This website is designed to help students manage their labs and tutorials more effectively.</p>
-    <a href="changetimetable.php"><button>Alter Timetable</button></a>
+    <button id="alterTimetableBtn"><a href="Modify.php" style="text-decoration: none; color: inherit;">Alter Timetable</a></button>
 </div>
 
-
 <div id="content">
-    <div class="navigation">
-        <button id="prevWeek">Previous Week</button>
-        <button id="nextWeek">Next Week</button>
-    </div>
     <div id="timetable">
         <?php
         // Define days of the week
@@ -183,53 +161,82 @@ $timetableEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 $found = false;
                 foreach ($timetableEntries as $entry) {
                     if ($entry['day'] === $day && $entry['time'] === $hour) {
-                        echo "<div class='slot' data-student-id='" . $userInfo['student_id'] . "' data-username='" . $username . "' data-lab-title='" . $entry['activity'] . "'>" . $entry['activity'] . "</div>";
+                        echo "<div class='slot' data-student-id='" . $userInfo['student_id'] . "' data-username='" . $username . "' data-lab-title='" . $entry['activity'] . "' data-day='" . $day . "' data-time='" . $hour . "'>
+                                <span class='edit-btn'>Edit</span>
+                                " . $entry['activity'] . "
+                            </div>";
                         $found = true;
                         break;
                     }
                 }
                 // If no entry found, display an empty slot
                 if (!$found) {
-                    echo "<div class='slot'></div>";
+                    echo "<div class='slot' data-student-id='" . $userInfo['student_id'] . "' data-username='" . $username . "' data-day='" . $day . "' data-time='" . $hour . "'>
+                            <span class='edit-btn'>Edit</span>
+                        </div>";
                 }
             }
         }
         ?>
     </div>
 </div>
-<div class="modal" id="labInfoModal">
+
+<!-- Modal for editing lab activity -->
+<div class="modal" id="editModal">
     <div class="modal-content">
-        <p id="studentId"></p>
-        <p id="username"></p>
-        <p id="labTitle"></p>
+        <form id="editForm">
+            <input type="hidden" id="editStudentId" name="student_id">
+            <input type="hidden" id="editUsername" name="username">
+            <input type="hidden" id="editDay" name="day">
+            <input type="hidden" id="editTime" name="time">
+            <label for="editLabTitle">New Lab Title:</label>
+            <input type="text" id="editLabTitle" name="lab_title">
+            <button type="submit">Save</button>
+        </form>
     </div>
 </div>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function () {
-        $('.slot').click(function () {
-            var studentId = $(this).data('student-id');
-            var username = $(this).data('username');
-            var labTitle = $(this).data('lab-title');
-            $('#studentId').text('Student ID: ' + studentId);
-            $('#username').text('Username: ' + username);
-            $('#labTitle').text('Lab Title: ' + labTitle);
-            $('.modal').fadeIn();
+        $('.edit-btn').click(function () {
+            var slot = $(this).parent('.slot');
+            $('#editStudentId').val(slot.data('student-id'));
+            $('#editUsername').val(slot.data('username'));
+            $('#editDay').val(slot.data('day'));
+            $('#editTime').val(slot.data('time'));
+            $('#editLabTitle').val(slot.data('lab-title'));
+            $('#editModal').fadeIn();
         });
 
-        $('.modal').click(function () {
-            $('.modal').fadeOut();
+        $('#editForm').submit(function (e) {
+            e.preventDefault();
+            var formData = $(this).serialize();
+            $.ajax({
+                type: 'POST',
+                url: 'update_timetable.php', // Create this PHP file to handle the update
+                data: formData,
+                dataType: 'json',
+                success: function (response) {
+                    if (response.success) {
+                        // Close modal and refresh timetable
+                        $('#editModal').fadeOut();
+                        window.location.reload();
+                    } else {
+                        // Handle error
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function () {
+                    // Handle error
+                    alert('Error: Unable to update timetable');
+                }
+            });
         });
 
-        // Event listener for previous week button click
-        $('#prevWeek').click(function () {
-            // Your JavaScript code to navigate to previous week goes here
-        });
-
-        // Event listener for next week button click
-        $('#nextWeek').click(function () {
-            // Your JavaScript code to navigate to next week goes here
-        });
+       // $('.modal').click(function () {
+ //           $(this).fadeOut();
+ //       });
     });
 </script>
 </body>
