@@ -30,8 +30,6 @@ $timetableEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Timetable</title>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -65,13 +63,13 @@ $timetableEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
             padding: 20px;
             overflow: auto;
             display: grid;
-            grid-template-columns: 120px repeat(5, 1fr); /* Evenly sized columns */
+            grid-template-columns: 120px repeat(5, 200px); /* Adjusted column widths */
             grid-gap: 20px;
         }
 
         #timetable {
             display: grid;
-            grid-template-columns: repeat(6, 1fr); /* 6 columns for Monday - Friday */
+            grid-template-columns: 120px repeat(5, 200px); /* Adjusted column widths */
             grid-template-rows: 60px repeat(9, 1fr); /* 10 rows for 9:00 AM - 5:00 PM */
             grid-gap: 1px; /* Add gap between grid items */
         }
@@ -91,6 +89,7 @@ $timetableEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         .slot {
+            position: relative;
             border: 1px solid #ccc;
             padding: 10px;
             background-color: #f9f9f9;
@@ -98,59 +97,107 @@ $timetableEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
             overflow: hidden; /* Hide overflow text */
             white-space: nowrap; /* Prevent text wrapping */
             text-overflow: ellipsis; /* Display ellipsis for overflowing text */
+            cursor: pointer; /* Add cursor pointer */
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+            z-index: 9999;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
         }
     </style>
 </head>
 <body>
-    <div id="toolbar">
-        <h1>Timetable</h1>
-    </div>
+<div id="toolbar">
+    <h1>Timetable</h1>
+</div>
 
-    <div id="sidebar">
-        <h2>Welcome, <?php echo $_SESSION['username']; ?></h2>
-        <h3>ID: <?php echo $_SESSION['student_id']; ?></h3>
-        <p>Welcome to SlotSwap! This website is designed to help students manage their labs and tutorials more effectively.</p>
-    </div>
+<div id="sidebar">
+    <h2>Welcome, <?php echo $_SESSION['username']; ?></h2>
+    <h3>ID: <?php echo $_SESSION['student_id']; ?></h3>
+    <p>Welcome to SlotSwap! This website is designed to help students manage their labs and tutorials more effectively.</p>
+</div>
 
-    <div id="content">
-        <div id="timetable">
-            <?php
-            // Define days of the week
-            $daysOfWeek = array('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday');
+<div id="content">
+    <div id="timetable">
+        <?php
+        // Define days of the week
+        $daysOfWeek = array('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday');
 
-            // Display day headers
-            echo "<div class='time'></div>"; // Empty slot for spacing
+        // Display day headers
+        echo "<div class='time'></div>"; // Empty slot for spacing
+        foreach ($daysOfWeek as $day) {
+            echo "<div class='day'><h3>$day</h3></div>";
+        }
+
+        // Define array for hours from 9 AM to 5 PM
+        $hours = array('9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM');
+
+        // Loop through hours
+        foreach ($hours as $hour) {
+            // Display the hours on the y-axis
+            echo "<div class='time'>$hour</div>";
+
+            // Loop through days of the week
             foreach ($daysOfWeek as $day) {
-                echo "<div class='day'><h3>$day</h3></div>";
-            }
-
-            // Define array for hours from 9 AM to 5 PM
-            $hours = array('9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM');
-
-            // Loop through hours
-            foreach ($hours as $hour) {
-                // Display the hours on the y-axis
-                echo "<div class='time'>$hour</div>";
-                
-                // Loop through days of the week
-                foreach ($daysOfWeek as $day) {
-                    // Find timetable entry for the current day and hour
-                    $found = false;
-                    foreach ($timetableEntries as $entry) {
-                        if ($entry['day'] === $day && $entry['time'] === $hour) {
-                            echo "<div class='slot'>" . $entry['activity'] . "</div>";
-                            $found = true;
-                            break;
-                        }
-                    }
-                    // If no entry found, display an empty slot
-                    if (!$found) {
-                        echo "<div class='slot'></div>";
+                // Find timetable entry for the current day and hour
+                $found = false;
+                foreach ($timetableEntries as $entry) {
+                    if ($entry['day'] === $day && $entry['time'] === $hour) {
+                        echo "<div class='slot' data-student-id='" . $userInfo['student_id'] . "' data-username='" . $username . "' data-lab-title='" . $entry['activity'] . "'>" . $entry['activity'] . "</div>";
+                        $found = true;
+                        break;
                     }
                 }
+                // If no entry found, display an empty slot
+                if (!$found) {
+                    echo "<div class='slot'></div>";
+                }
             }
-            ?>
-        </div>
+        }
+        ?>
     </div>
+</div>
+<div class="modal" id="labInfoModal">
+    <div class="modal-content">
+        <p id="studentId"></p>
+        <p id="username"></p>
+        <p id="labTitle"></p>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('.slot').click(function () {
+            var studentId = $(this).data('student-id');
+            var username = $(this).data('username');
+            var labTitle = $(this).data('lab-title');
+            $('#studentId').text('Student ID: ' + studentId);
+            $('#username').text('Username: ' + username);
+            $('#labTitle').text('Lab Title: ' + labTitle);
+            $('.modal').fadeIn();
+        });
+
+        $('.modal').click(function () {
+            $('.modal').fadeOut();
+        });
+    });
+</script>
 </body>
 </html>
