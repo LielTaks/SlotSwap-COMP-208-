@@ -121,6 +121,23 @@ $timetableEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
         }
+
+        .navigation {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .navigation button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        .navigation button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -132,9 +149,15 @@ $timetableEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <h2>Welcome, <?php echo $_SESSION['username']; ?></h2>
     <h3>ID: <?php echo $_SESSION['student_id']; ?></h3>
     <p>Welcome to SlotSwap! This website is designed to help students manage their labs and tutorials more effectively.</p>
+    <a href="changetimetable.php"><button>Alter Timetable</button></a>
 </div>
 
+
 <div id="content">
+    <div class="navigation">
+        <button id="prevWeek">Previous Week</button>
+        <button id="nextWeek">Next Week</button>
+    </div>
     <div id="timetable">
         <?php
         // Define days of the week
@@ -196,6 +219,16 @@ $timetableEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $('.modal').click(function () {
             $('.modal').fadeOut();
+        });
+
+        // Event listener for previous week button click
+        $('#prevWeek').click(function () {
+            // Your JavaScript code to navigate to previous week goes here
+        });
+
+        // Event listener for next week button click
+        $('#nextWeek').click(function () {
+            // Your JavaScript code to navigate to next week goes here
         });
     });
 </script>
