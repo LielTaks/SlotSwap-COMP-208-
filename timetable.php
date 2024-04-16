@@ -100,6 +100,16 @@ $timetableEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
             cursor: pointer; /* Add cursor pointer */
         }
 
+        /* Hide the edit button by default */
+        .edit-btn {
+            display: none;
+        }
+
+        /* Show the edit button on hover */
+        .slot:hover .edit-btn {
+        display: inline-block;
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -154,14 +164,14 @@ $timetableEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
         foreach ($hours as $hour) {
             // Display the hours on the y-axis
             echo "<div class='time'>$hour</div>";
-
+        
             // Loop through days of the week
             foreach ($daysOfWeek as $day) {
                 // Find timetable entry for the current day and hour
                 $found = false;
                 foreach ($timetableEntries as $entry) {
                     if ($entry['day'] === $day && $entry['time'] === $hour) {
-                        echo "<div class='slot' data-student-id='" . $userInfo['student_id'] . "' data-username='" . $username . "' data-lab-title='" . $entry['activity'] . "' data-day='" . $day . "' data-time='" . $hour . "'>
+                        echo "<div class='slot with-text' data-student-id='" . $userInfo['student_id'] . "' data-username='" . $username . "' data-lab-title='" . $entry['activity'] . "' data-day='" . $day . "' data-time='" . $hour . "'>
                                 <span class='edit-btn'>Edit</span>
                                 " . $entry['activity'] . "
                             </div>";
@@ -171,12 +181,12 @@ $timetableEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 }
                 // If no entry found, display an empty slot
                 if (!$found) {
-                    echo "<div class='slot' data-student-id='" . $userInfo['student_id'] . "' data-username='" . $username . "' data-day='" . $day . "' data-time='" . $hour . "'>
+                    echo "<div class='slot without-text' data-student-id='" . $userInfo['student_id'] . "' data-username='" . $username . "' data-day='" . $day . "' data-time='" . $hour . "'>
                             <span class='edit-btn'>Edit</span>
                         </div>";
                 }
             }
-        }
+        }       
         ?>
     </div>
 </div>
@@ -190,7 +200,12 @@ $timetableEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <input type="hidden" id="editDay" name="day">
             <input type="hidden" id="editTime" name="time">
             <label for="editLabTitle">New Lab Title:</label>
-            <input type="text" id="editLabTitle" name="lab_title">
+            <select id="editLabTitle" name="lab_title">
+<!-- Add options dynamically here -->
+            <option value="Lab 1">Lab 1</option>
+            <option value="Lab 2">Lab 2</option>
+            <option value="Lab 3">Lab 3</option>
+            </select>
             <button type="submit">Save</button>
         </form>
     </div>
@@ -199,43 +214,47 @@ $timetableEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function () {
-        $('.slot').click(function () {
-            var slot = $(this);
-            $('#editStudentId').val(slot.data('student-id'));
-            $('#editUsername').val(slot.data('username'));
-            $('#editDay').val(slot.data('day'));
-            $('#editTime').val(slot.data('time'));
-            $('#editLabTitle').val(slot.data('lab-title'));
-            $('#editModal').fadeIn();
-        });
+    // Hide "Edit" button for slots without text
+    $('.slot.without-text .edit-btn').hide();
 
-        $('#editForm').submit(function (e) {
-            e.preventDefault();
-            var formData = $(this).serialize();
-            $.ajax({
-                type: 'POST',
-                url: 'update_timetable.php', // Create this PHP file to handle the update
-                data: formData,
-                dataType: 'json',
-                success: function (response) {
-                    if (response.success) {
-                        // Close modal and refresh timetable
-                        $('#editModal').fadeOut();
-                        window.location.reload();
-                    } else {
-                        // Handle error
-                        alert('Error: ' + response.message);
-                    }
-                },
-                error: function () {
+    // Enable click event only for slots with text
+    $('.slot.with-text').click(function () {
+        var slot = $(this);
+        $('#editStudentId').val(slot.data('student-id'));
+        $('#editUsername').val(slot.data('username'));
+        $('#editDay').val(slot.data('day'));
+        $('#editTime').val(slot.data('time'));
+        $('#editLabTitle').val(slot.data('lab-title'));
+        $('#editModal').fadeIn();
+    });
+
+    $('#editForm').submit(function (e) {
+        e.preventDefault();
+        var formData = $(this).serialize();
+        $.ajax({
+            type: 'POST',
+            url: 'update_timetable.php', // Create this PHP file to handle the update
+            data: formData,
+            dataType: 'json',
+            success: function (response) {
+                if (response.success) {
+                    // Close modal and refresh timetable
+                    $('#editModal').fadeOut();
+                    window.location.reload();
+                } else {
                     // Handle error
-                    alert('Error: Unable to update timetable');
+                    alert('Error: ' + response.message);
                 }
-            });
-        });
-
-        $('.modal').dblclick(function () {
-            $(this).fadeOut();
+            },
+            error: function () {
+                // Handle error
+                alert('Error: Unable to update timetable');
+            }
         });
     });
+
+    $('.modal').dblclick(function () {
+        $(this).fadeOut();
+    });
+});
 </script>
