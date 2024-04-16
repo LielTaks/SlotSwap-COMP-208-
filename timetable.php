@@ -199,8 +199,8 @@ $timetableEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function () {
-        $('.edit-btn').click(function () {
-            var slot = $(this).parent('.slot');
+        $('.slot').click(function () {
+            var slot = $(this);
             $('#editStudentId').val(slot.data('student-id'));
             $('#editUsername').val(slot.data('username'));
             $('#editDay').val(slot.data('day'));
@@ -235,9 +235,7 @@ $timetableEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
         });
 
         $('.modal').dblclick(function () {
-    $(this).fadeOut();
-});
+            $(this).fadeOut();
+        });
     });
 </script>
-</body>
-</html>
