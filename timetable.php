@@ -171,8 +171,8 @@ $activities = $stmt->fetchAll(PDO::FETCH_COLUMN);
                 $found = false;
                 foreach ($timetableEntries as $entry) {
                     if ($entry['day'] === $day && $entry['time'] === $hour) {
-                        // Display slot with activity
-                        echo "<div class='slot with-text' data-student-id='" . $userInfo['student_id'] . "' data-username='" . $username . "' data-lab-title='" . $entry['activity'] . "' data-day='" . $day . "' data-time='" . $hour . "'>
+                        // Display slot with activity and data attribute for available subjects
+                        echo "<div class='slot with-text' data-student-id='" . $userInfo['student_id'] . "' data-username='" . $username . "' data-lab-title='" . $entry['activity'] . "' data-available-subjects='" . $entry['activity'] . "' data-day='" . $day . "' data-time='" . $hour . "'>
                                 <span class='edit-btn'>Edit</span>
                                 " . $entry['activity'] . "
                             </div>";
@@ -202,32 +202,7 @@ $activities = $stmt->fetchAll(PDO::FETCH_COLUMN);
             <input type="hidden" id="editTime" name="time">
             <label for="editLabTitle">New Lab Title:</label>
             <select id="editLabTitle" name="lab_title">
-                <?php foreach ($activities as $activity) : ?>
-                    <option value="<?php echo $activity; ?>"><?php echo $activity; ?></option>
-                <?php endforeach; ?>
-            </select>
-            <button type="submit">Save</button>
-        </form>
-    </div>
-</div>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-
-<!-- Modal for editing lab activity -->
-<div class="modal" id="editModal">
-    <div class="modal-content">
-        <form id="editForm">
-            <input type="hidden" id="editStudentId" name="student_id">
-            <input type="hidden" id="editUsername" name="username">
-            <input type="hidden" id="editDay" name="day">
-            <input type="hidden" id="editTime" name="time">
-            <label for="editLabTitle">New Lab Title:</label>
-            <select id="editLabTitle" name="lab_title">
-<!-- Add options dynamically here -->
-            <option value="Lab 1">Lab 1</option>
-            <option value="Lab 2">Lab 2</option>
-            <option value="Lab 3">Lab 3</option>
+                <!-- Options will be dynamically added by JavaScript -->
             </select>
             <button type="submit">Save</button>
         </form>
@@ -237,47 +212,60 @@ $activities = $stmt->fetchAll(PDO::FETCH_COLUMN);
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function () {
-    // Hide "Edit" button for slots without text
-    $('.slot.without-text .edit-btn').hide();
+        // Function to populate dropdown based on selected slot
+        function populateDropdown(activity) {
+            $('#editLabTitle').empty(); // Clear previous options
+            var availableSubjects = $('.slot.with-text[data-lab-title="' + activity + '"]').data('available-subjects').split(',');
+            availableSubjects.forEach(function (subject) {
+                $('#editLabTitle').append('<option value="' + subject + '">' + subject + '</option>');
+            });
+        }
 
-    // Enable click event only for slots with text
-    $('.slot.with-text').click(function () {
-        var slot = $(this);
-        $('#editStudentId').val(slot.data('student-id'));
-        $('#editUsername').val(slot.data('username'));
-        $('#editDay').val(slot.data('day'));
-        $('#editTime').val(slot.data('time'));
-        $('#editLabTitle').val(slot.data('lab-title'));
-        $('#editModal').fadeIn();
-    });
+        // Hide "Edit" button for slots without text
+        $('.slot.without-text .edit-btn').hide();
 
-    $('#editForm').submit(function (e) {
-        e.preventDefault();
-        var formData = $(this).serialize();
-        $.ajax({
-            type: 'POST',
-            url: 'update_timetable.php', // Create this PHP file to handle the update
-            data: formData,
-            dataType: 'json',
-            success: function (response) {
-                if (response.success) {
-                    // Close modal and refresh timetable
-                    $('#editModal').fadeOut();
-                    window.location.reload();
-                } else {
+        // Enable click event only for slots with text
+        $('.slot.with-text').click(function () {
+            var slot = $(this);
+            $('#editStudentId').val(slot.data('student-id'));
+            $('#editUsername').val(slot.data('username'));
+            $('#editDay').val(slot.data('day'));
+            $('#editTime').val(slot.data('time'));
+            var activity = slot.data('lab-title');
+            $('#editLabTitle').val(activity); // Set default value
+            populateDropdown(activity);
+            $('#editModal').fadeIn();
+        });
+
+        $('#editForm').submit(function (e) {
+            e.preventDefault();
+            var formData = $(this).serialize();
+            $.ajax({
+                type: 'POST',
+                url: 'update_timetable.php', // Create this PHP file to handle the update
+                data: formData,
+                dataType: 'json',
+                success: function (response) {
+                    if (response.success) {
+                        // Close modal and refresh timetable
+                        $('#editModal').fadeOut();
+                        window.location.reload();
+                    } else {
+                        // Handle error
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function () {
                     // Handle error
-                    alert('Error: ' + response.message);
+                    alert('Error: Unable to update timetable');
                 }
-            },
-            error: function () {
-                // Handle error
-                alert('Error: Unable to update timetable');
-            }
+            });
+        });
+
+        $('.modal').dblclick(function () {
+            $(this).fadeOut();
         });
     });
-
-    $('.modal').dblclick(function () {
-        $(this).fadeOut();
-    });
-});
 </script>
+</body>
+</html>
