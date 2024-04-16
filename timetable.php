@@ -22,6 +22,12 @@ $sql = "SELECT * FROM timetable WHERE user_id = :user_id";
 $stmt = $db->prepare($sql);
 $stmt->execute(array(':user_id' => $userInfo['id']));
 $timetableEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Fetch activity data from the database
+$sql = "SELECT DISTINCT activity FROM timetable WHERE user_id = :user_id";
+$stmt = $db->prepare($sql);
+$stmt->execute(array(':user_id' => $userInfo['id']));
+$activities = $stmt->fetchAll(PDO::FETCH_COLUMN);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -131,7 +137,7 @@ $timetableEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
         }
-    </style>
+        </style>
 </head>
 <body>
 <div id="toolbar">
@@ -148,29 +154,24 @@ $timetableEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <div id="content">
     <div id="timetable">
         <?php
-        // Define days of the week
+        // Define days of the week and hours
         $daysOfWeek = array('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday');
+        $hours = array('9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM');
 
-        // Display day headers
+        // Display timetable grid
         echo "<div class='time'></div>"; // Empty slot for spacing
         foreach ($daysOfWeek as $day) {
             echo "<div class='day'><h3>$day</h3></div>";
         }
 
-        // Define array for hours from 9 AM to 5 PM
-        $hours = array('9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM');
-
-        // Loop through hours
+        // Loop through hours and days to display timetable slots
         foreach ($hours as $hour) {
-            // Display the hours on the y-axis
-            echo "<div class='time'>$hour</div>";
-        
-            // Loop through days of the week
+            echo "<div class='time'>$hour</div>"; // Display the hours on the y-axis
             foreach ($daysOfWeek as $day) {
-                // Find timetable entry for the current day and hour
                 $found = false;
                 foreach ($timetableEntries as $entry) {
                     if ($entry['day'] === $day && $entry['time'] === $hour) {
+                        // Display slot with activity
                         echo "<div class='slot with-text' data-student-id='" . $userInfo['student_id'] . "' data-username='" . $username . "' data-lab-title='" . $entry['activity'] . "' data-day='" . $day . "' data-time='" . $hour . "'>
                                 <span class='edit-btn'>Edit</span>
                                 " . $entry['activity'] . "
@@ -179,17 +180,39 @@ $timetableEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         break;
                     }
                 }
-                // If no entry found, display an empty slot
                 if (!$found) {
+                    // Display empty slot
                     echo "<div class='slot without-text' data-student-id='" . $userInfo['student_id'] . "' data-username='" . $username . "' data-day='" . $day . "' data-time='" . $hour . "'>
                             <span class='edit-btn'>Edit</span>
                         </div>";
                 }
             }
-        }       
+        }
         ?>
     </div>
 </div>
+
+<!-- Modal for editing lab activity -->
+<div class="modal" id="editModal">
+    <div class="modal-content">
+        <form id="editForm">
+            <input type="hidden" id="editStudentId" name="student_id">
+            <input type="hidden" id="editUsername" name="username">
+            <input type="hidden" id="editDay" name="day">
+            <input type="hidden" id="editTime" name="time">
+            <label for="editLabTitle">New Lab Title:</label>
+            <select id="editLabTitle" name="lab_title">
+                <?php foreach ($activities as $activity) : ?>
+                    <option value="<?php echo $activity; ?>"><?php echo $activity; ?></option>
+                <?php endforeach; ?>
+            </select>
+            <button type="submit">Save</button>
+        </form>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
 
 <!-- Modal for editing lab activity -->
 <div class="modal" id="editModal">
