@@ -28,6 +28,12 @@ $sql = "SELECT DISTINCT activity FROM timetable WHERE user_id = :user_id";
 $stmt = $db->prepare($sql);
 $stmt->execute(array(':user_id' => $userInfo['id']));
 $activities = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+// Fetch all lab times for the selected lab
+$sql = "SELECT day, time FROM timetable WHERE user_id = :user_id AND activity = :activity";
+$stmt = $db->prepare($sql);
+$stmt->execute(array(':user_id' => $userInfo['id'], ':activity' => 'Lab: Physics')); // Change 'Lab: Physics' to the selected lab
+$labTimes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -38,10 +44,11 @@ $activities = $stmt->fetchAll(PDO::FETCH_COLUMN);
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
             background-color: #f5f5f5;
+            color: #333;
         }
 
         #toolbar {
@@ -85,13 +92,12 @@ $activities = $stmt->fetchAll(PDO::FETCH_COLUMN);
             padding: 10px;
             background-color: #fff;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
         }
 
         .day h3 {
             margin: 0;
             font-size: 18px;
-            color: #333;
-            text-align: center;
         }
 
         .slot {
@@ -104,16 +110,39 @@ $activities = $stmt->fetchAll(PDO::FETCH_COLUMN);
             white-space: nowrap; /* Prevent text wrapping */
             text-overflow: ellipsis; /* Display ellipsis for overflowing text */
             cursor: pointer; /* Add cursor pointer */
+            transition: all 0.3s ease;
         }
 
-        /* Hide the edit button by default */
-        .edit-btn {
+        .slot:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .slot.with-text {
+            color: #333;
+        }
+
+        .slot.without-text {
+            background-color: #f0f0f0;
+        }
+
+        .slot.with-text .edit-btn {
             display: none;
         }
 
-        /* Show the edit button on hover */
-        .slot:hover .edit-btn {
-        display: inline-block;
+        .slot.with-text:hover .edit-btn {
+            display: inline-block;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            color: #666;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .slot.with-text:hover .edit-btn:hover {
+            color: #000;
         }
 
         .modal {
@@ -137,7 +166,46 @@ $activities = $stmt->fetchAll(PDO::FETCH_COLUMN);
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
         }
-        </style>
+
+        select {
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        select:hover {
+            border-color: #666;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 14px;
+            background-color: #1976D2;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0d47a1;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
 <div id="toolbar">
@@ -148,7 +216,7 @@ $activities = $stmt->fetchAll(PDO::FETCH_COLUMN);
     <h2>Welcome, <?php echo $_SESSION['username']; ?></h2>
     <h3>ID: <?php echo $_SESSION['student_id']; ?></h3>
     <p>Welcome to SlotSwap! This website is designed to help students manage their labs and tutorials more effectively.</p>
-    <button id="alterTimetableBtn"><a href="Modify.php" style="text-decoration: none; color: inherit;">Alter Timetable</a></button>
+    <button id="alterTimetableBtn"><a href="Modify.php">Alter Timetable</a></button>
 </div>
 
 <div id="content">
@@ -200,9 +268,13 @@ $activities = $stmt->fetchAll(PDO::FETCH_COLUMN);
             <input type="hidden" id="editUsername" name="username">
             <input type="hidden" id="editDay" name="day">
             <input type="hidden" id="editTime" name="time">
-            <label for="editLabTitle">New Lab Title:</label>
+            <label for="editLabTitle">Lab Title:</label>
             <select id="editLabTitle" name="lab_title">
                 <!-- Options will be dynamically added by JavaScript -->
+            </select>
+            <label for="editLabTime">Lab Time:</label>
+            <select id="editLabTime" name="lab_time">
+                <!-- Lab times will be dynamically added by JavaScript -->
             </select>
             <button type="submit">Save</button>
         </form>
@@ -212,60 +284,60 @@ $activities = $stmt->fetchAll(PDO::FETCH_COLUMN);
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function () {
-        // Function to populate dropdown based on selected slot
-        function populateDropdown(activity) {
-            $('#editLabTitle').empty(); // Clear previous options
-            var availableSubjects = $('.slot.with-text[data-lab-title="' + activity + '"]').data('available-subjects').split(',');
-            availableSubjects.forEach(function (subject) {
-                $('#editLabTitle').append('<option value="' + subject + '">' + subject + '</option>');
-            });
-        }
-
-        // Hide "Edit" button for slots without text
-        $('.slot.without-text .edit-btn').hide();
-
-        // Enable click event only for slots with text
-        $('.slot.with-text').click(function () {
-            var slot = $(this);
-            $('#editStudentId').val(slot.data('student-id'));
-            $('#editUsername').val(slot.data('username'));
-            $('#editDay').val(slot.data('day'));
-            $('#editTime').val(slot.data('time'));
-            var activity = slot.data('lab-title');
-            $('#editLabTitle').val(activity); // Set default value
-            populateDropdown(activity);
-            $('#editModal').fadeIn();
+    // Function to populate dropdown based on selected slot
+    function populateDropdown(labTimes) {
+        $('#editLabTime').empty(); // Clear previous options
+        labTimes.forEach(function (time) {
+            $('#editLabTime').append('<option value="' + time['day'] + ' ' + time['time'] + '">' + time['day'] + ' ' + time['time'] + '</option>');
         });
+    }
 
-        $('#editForm').submit(function (e) {
-            e.preventDefault();
-            var formData = $(this).serialize();
-            $.ajax({
-                type: 'POST',
-                url: 'update_timetable.php', // Create this PHP file to handle the update
-                data: formData,
-                dataType: 'json',
-                success: function (response) {
-                    if (response.success) {
-                        // Close modal and refresh timetable
-                        $('#editModal').fadeOut();
-                        window.location.reload();
-                    } else {
-                        // Handle error
-                        alert('Error: ' + response.message);
-                    }
-                },
-                error: function () {
+    // Enable click event only for slots with text
+    $('.slot.with-text').click(function () {
+        var slot = $(this);
+        var activity = slot.data('lab-title');
+        $('#editLabTitle').val(activity); // Set default value
+        $('#editStudentId').val(slot.data('student-id'));
+        $('#editUsername').val(slot.data('username'));
+        var labTimes = <?php echo json_encode($labTimes); ?>;
+        populateDropdown(labTimes);
+        $('#editModal').fadeIn();
+    });
+
+    // Hide "Edit" button for slots without text
+    $('.slot.without-text .edit-btn').hide();
+
+    $('#editForm').submit(function (e) {
+        e.preventDefault();
+        var formData = $(this).serialize();
+        $.ajax({
+            type: 'POST',
+            url: 'update_timetable.php', // Create this PHP file to handle the update
+            data: formData,
+            dataType: 'json',
+            success: function (response) {
+                if (response.success) {
+                    // Close modal and refresh timetable
+                    $('#editModal').fadeOut();
+                    window.location.reload();
+                } else {
                     // Handle error
-                    alert('Error: Unable to update timetable');
+                    alert('Error: ' + response.message);
                 }
-            });
-        });
-
-        $('.modal').dblclick(function () {
-            $(this).fadeOut();
+            },
+            error: function () {
+                // Handle error
+                alert('Error: Unable to update timetable');
+            }
         });
     });
+
+    $('.modal').dblclick(function () {
+        $(this).fadeOut();
+    });
+});
+
+
 </script>
 </body>
 </html>
