@@ -29,11 +29,14 @@ $stmt = $db->prepare($sql);
 $stmt->execute(array(':user_id' => $userInfo['id']));
 $activities = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-// Fetch all lab times for the selected lab
-$sql = "SELECT day, time FROM timetable WHERE user_id = :user_id AND activity = :activity";
-$stmt = $db->prepare($sql);
-$stmt->execute(array(':user_id' => $userInfo['id'], ':activity' => 'Lab: Physics')); // Change 'Lab: Physics' to the selected lab
-$labTimes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// Fetch lab times for each activity
+$labTimes = array();
+foreach ($activities as $activity) {
+    $sql = "SELECT day, time FROM timetable WHERE user_id = :user_id AND activity = :activity";
+    $stmt = $db->prepare($sql);
+    $stmt->execute(array(':user_id' => $userInfo['id'], ':activity' => $activity));
+    $labTimes[$activity] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -283,11 +286,13 @@ $labTimes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    $(document).ready(function () {
-    // Function to populate dropdown based on selected slot
-    function populateDropdown(labTimes) {
+   $(document).ready(function () {
+    // Function to populate dropdown based on selected activity
+    function populateDropdown(activity) {
+        var labTimes = <?php echo json_encode($labTimes); ?>;
+        var times = labTimes[activity];
         $('#editLabTime').empty(); // Clear previous options
-        labTimes.forEach(function (time) {
+        times.forEach(function (time) {
             $('#editLabTime').append('<option value="' + time['day'] + ' ' + time['time'] + '">' + time['day'] + ' ' + time['time'] + '</option>');
         });
     }
@@ -299,8 +304,7 @@ $labTimes = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $('#editLabTitle').val(activity); // Set default value
         $('#editStudentId').val(slot.data('student-id'));
         $('#editUsername').val(slot.data('username'));
-        var labTimes = <?php echo json_encode($labTimes); ?>;
-        populateDropdown(labTimes);
+        populateDropdown(activity); // Populate dropdown with lab times for selected activity
         $('#editModal').fadeIn();
     });
 
