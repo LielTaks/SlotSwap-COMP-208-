@@ -271,10 +271,6 @@ foreach ($activities as $activity) {
             <input type="hidden" id="editUsername" name="username">
             <input type="hidden" id="editDay" name="day">
             <input type="hidden" id="editTime" name="time">
-            <label for="editLabTitle">Lab Title:</label>
-            <select id="editLabTitle" name="lab_title">
-                <!-- Options will be dynamically added by JavaScript -->
-            </select>
             <label for="editLabTime">Lab Time:</label>
             <select id="editLabTime" name="lab_time">
                 <!-- Lab times will be dynamically added by JavaScript -->
@@ -301,9 +297,10 @@ foreach ($activities as $activity) {
     $('.slot.with-text').click(function () {
         var slot = $(this);
         var activity = slot.data('lab-title');
-        $('#editLabTitle').val(activity); // Set default value
         $('#editStudentId').val(slot.data('student-id'));
         $('#editUsername').val(slot.data('username'));
+        $('#editDay').val(slot.data('day'));
+        $('#editTime').val(slot.data('time'));
         populateDropdown(activity); // Populate dropdown with lab times for selected activity
         $('#editModal').fadeIn();
     });
@@ -340,8 +337,6 @@ foreach ($activities as $activity) {
         $(this).fadeOut();
     });
 });
-
-
 </script>
 </body>
 </html>
