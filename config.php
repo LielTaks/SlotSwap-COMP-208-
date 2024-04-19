@@ -1,5 +1,5 @@
 <?php
-$dsn = 'mysql:host=localhost;dbname=sgbakinp';
+$dsn = 'mysql:host=studdb.csc.liv.ac.uk;dbname=sgbakinp';
 $username = 'sgbakinp';
 $password = 'Kaynlape10';
 
