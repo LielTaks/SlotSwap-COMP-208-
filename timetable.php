@@ -313,7 +313,7 @@ foreach ($activities as $activity) {
         var formData = $(this).serialize();
         $.ajax({
             type: 'POST',
-            url: 'update_timetable.php', // Create this PHP file to handle the update
+            url: 'update_timetable.php', 
             data: formData,
             dataType: 'json',
             success: function (response) {
